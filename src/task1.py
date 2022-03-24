@@ -78,12 +78,13 @@ players19_raw_df.printSchema()
 players20_raw_df.printSchema()
 
 players15_year = players15_raw_df.withColumn("year", lit(2015))
-players16_year = players15_raw_df.withColumn("year", lit(2016))
-players17_year = players15_raw_df.withColumn("year", lit(2017))
-players18_year = players15_raw_df.withColumn("year", lit(2018))
-players19_year = players15_raw_df.withColumn("year", lit(2019))
-players20_year = players15_raw_df.withColumn("year", lit(2020))
+players16_year = players16_raw_df.withColumn("year", lit(2016))
+players17_year = players17_raw_df.withColumn("year", lit(2017))
+players18_year = players18_raw_df.withColumn("year", lit(2018))
+players19_year = players19_raw_df.withColumn("year", lit(2019))
+players20_year = players20_raw_df.withColumn("year", lit(2020))
 
+# Union data
 players15_year.columns == players16_year.columns == players17_year.columns == players18_year.columns == players19_year.columns == players20_year.columns
 
 players_unioned = reduce(DataFrame.unionByName, [players15_year,players16_year,players17_year,players18_year,players19_year,players20_year])
@@ -102,7 +103,7 @@ players_unioned.select([(count(when(isnan(c) | col(c).isNull(), c))/nrow > 0.5).
 
 players_dropped_na50 = players_unioned.drop("release_clause_eur", "player_tags", "loaned_from", "nation_position", "nation_jersey_number", \
                                             "gk_diving", "gk_handling", "gk_kicking", "gk_reflexes", "gk_speed", "gk_positioning", \
-                                            "player_traits", "mentality_composure")
+                                            "player_traits")
 
 players_dropped_na50.select([(count(when(isnan(c) | col(c).isNull(), c))/nrow > 0.5).alias(c) for c in players_dropped_na50.columns]).show()
 
@@ -112,7 +113,7 @@ col_pm = ['attacking_crossing', 'attacking_finishing', 'attacking_heading_accura
           'skill_dribbling', 'skill_curve', 'skill_fk_accuracy', 'skill_long_passing', 'skill_ball_control', 'movement_acceleration',
           'movement_sprint_speed', 'movement_agility', 'movement_reactions', 'movement_balance', 'power_shot_power', 'power_jumping',
           'power_stamina', 'power_strength', 'power_long_shots', 'mentality_aggression', 'mentality_interceptions', 'mentality_positioning',
-          'mentality_vision', 'mentality_penalties', 'defending_marking', 'defending_standing_tackle', 'defending_sliding_tackle',
+          'mentality_vision', 'mentality_penalties', 'mentality_composure', 'defending_marking', 'defending_standing_tackle', 'defending_sliding_tackle',
           'goalkeeping_diving', 'goalkeeping_handling', 'goalkeeping_kicking', 'goalkeeping_positioning', 'goalkeeping_reflexes',
           'ls', 'st', 'rs', 'lw', 'lf', 'cf', 'rf', 'rw', 'lam', 'cam', 'ram', 'lm', 'lcm', 'cm', 'rcm', 'rm', 'lwb', 'ldm', 'cdm',
           'rdm', 'rwb', 'lb', 'lcb', 'cb', 'rcb', 'rb']
@@ -131,17 +132,23 @@ for c in col_pm:
         .withColumnRenamed("{}_total".format(c), c)\
         .withColumn(c, when((0 <= col(c)) & (col(c) <= 100), col(c)).otherwise(lit(None)))
 
-players_pm.select(col_pm).show()
+#players_pm.select(col_pm).show()
 
-players_pm.select(['goalkeeping_diving', 'goalkeeping_handling', 'goalkeeping_kicking', 'goalkeeping_positioning', 'goalkeeping_reflexes']).show()
+#players_pm.select(['goalkeeping_diving', 'goalkeeping_handling', 'goalkeeping_kicking', 'goalkeeping_positioning', 'goalkeeping_reflexes']).show()
 
 ## Impute the data
 
-players_pm.select([count(when((isnan(c) | col(c).isNull()), c)).alias(c) for c in players_dropped_na50.columns]).show()
+players_pm.select([count(when((isnan(c) | col(c).isNull()), c)).alias(c) for c in players_pm.columns]).show()
 
-[c for c in players_dropped_na50.columns if dict(players_dropped_na50.dtypes)[c] == "int"]
+[c for c in players_pm.columns if dict(players_pm.dtypes)[c] == "int"]
 
-num_null_col = ['team_jersey_number', 'pace', 'shooting', 'passing', 'dribbling', 'defending', 'physic'] + col_pm
+num_null_col = ['team_jersey_number', 'pace', 'shooting', 'passing', 'dribbling', 'defending', 'physic', 'skill_dribbling',
+                'movement_acceleration', 'movement_sprint_speed', 'movement_agility','movement_balance','power_jumping',
+                'power_stamina', 'power_strength', 'power_long_shots', 'mentality_positioning', 'mentality_composure',
+                'defending_marking', 'goalkeeping_diving', 'goalkeeping_handling', 'goalkeeping_kicking',
+                'goalkeeping_positioning', 'goalkeeping_reflexes', 'ls', 'st', 'rs', 'lw', 'lf', 'cf', 'rf', 'rw',
+                'lam', 'cam', 'ram', 'lm', 'lcm', 'cm', 'rcm', 'rm', 'lwb', 'ldm', 'cdm', 'rdm', 'rwb', 'lb', 'lcb',
+                'cb', 'rcb', 'rb']
 
 imputer_players = Imputer(
     inputCols = num_null_col,
@@ -155,7 +162,7 @@ for c in num_null_col:
 
 players_imputed.select([count(when((isnan(c) | col(c).isNull()), c)).alias(c) for c in players_imputed.columns]).show()
 
-### Three cols with missing values left: team_position: 1392, join: 6906, contract_valid_until: 1434
+### Three cols with missing values left: team_position: 1326, join: 8038, contract_valid_until: 1333
 
 # Cast types
 
