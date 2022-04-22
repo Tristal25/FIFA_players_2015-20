@@ -2,7 +2,9 @@
  
 # Soccer players (2015-2020) analysis project repository
 
-**The link to the video is:?**
+**Team members: Yanlin (Tristal) Li, Yueni Wang**
+
+**The link to the video is: https://youtu.be/sQLZVEf994c**
 
 ## Task I: Build and populate necessary tables
 
@@ -167,7 +169,7 @@ Here is the unit test result. All the tests were passed.
 The unittest cover 100% of the task2 codes. Here is the screenshot of the coverage report. 
 ![coverage](docs/coverage.png)
 
-For the full coverage report, see test/htmlcov/index.html. 
+ 
 
 
     
